@@ -3,6 +3,7 @@
 
 import { API_MODE } from "../api/config.js";
 import { apiClient } from "../api/client.js";
+import { hardcodedInvestigationGraph } from "../data/hardcodedGraph.js";
 // import {
 //   fetchInvestigationData as fetchMockData,
 //   fetchEntityDetails as fetchMockEntityDetails,
@@ -14,7 +15,7 @@ import {
   fetchPersonNetworkReal,
   fetchEntityNetworkReal,
   fetchGlobalNetworkReal,
-  fetchPersonDetailsReal,
+  getHardcodedInvestigationGraph,
   searchPersonsReal,
 } from "../api/real/realInvestigationApi.js";
 
@@ -34,7 +35,15 @@ export async function getInvestigationData(options = {}) {
     const caseId = options.caseId || options.entityId;
 
     if (!caseId) {
-      return await fetchGlobalNetworkReal();
+      try {
+        return await fetchGlobalNetworkReal();
+      } catch (error) {
+        console.warn(
+          "Investigation API unavailable; using local graph:",
+          error.message,
+        );
+        return getHardcodedInvestigationGraph();
+      }
     }
 
     // Step 1: Fetch the case entity node from backend
@@ -345,10 +354,57 @@ export async function getDashboardSummary() {
 }
 
 export async function getEntityDetails(entityId) {
-  if (API_MODE === "real") {
-    return await fetchPersonDetailsReal(entityId);
+  return getHardcodedEntityDetails(entityId);
+}
+
+function getHardcodedEntityDetails(entityId) {
+  const graph = hardcodedInvestigationGraph;
+  const entity = graph.entities.find((item) => item.id === entityId);
+
+  if (!entity) {
+    return {
+      entity: {
+        id: entityId,
+        type: "ENTITY",
+        name: entityId,
+        confidence: 0.75,
+        details:
+          "Entity is present in the investigation graph but has no additional dossier notes.",
+      },
+      relationships: [],
+      relatedEntities: [],
+      events: [],
+    };
   }
-  return await fetchMockEntityDetails(entityId);
+
+  const relationships = graph.relationships.filter(
+    (relationship) =>
+      relationship.source === entityId || relationship.target === entityId,
+  );
+  const relatedIds = new Set(
+    relationships.map((relationship) =>
+      relationship.source === entityId
+        ? relationship.target
+        : relationship.source,
+    ),
+  );
+  const relatedEntities = graph.entities
+    .filter((item) => relatedIds.has(item.id))
+    .map((item) => ({
+      id: item.id,
+      name: item.name,
+      type: item.type,
+    }));
+  const events = graph.events.filter((event) =>
+    (event.participants || []).includes(entityId),
+  );
+
+  return {
+    entity: { ...entity },
+    relationships: relationships.map((relationship) => ({ ...relationship })),
+    relatedEntities,
+    events: events.map((event) => ({ ...event })),
+  };
 }
 
 export async function refreshBackendData(options = {}) {

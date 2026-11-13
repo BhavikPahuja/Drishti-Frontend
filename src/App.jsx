@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
-import DashboardGraph from "./components/DashboardGraph";
+import DashboardPage from "./components/DashboardPage";
 import FileIngestionPage from "./components/FileIngestionPage";
 import TimelinePage from "./components/TimelinePage";
 import AICopilotPage from "./components/AICopilotPage";
@@ -64,7 +64,11 @@ export default function App() {
         {/* Main Content Area switching between the 5 Stitch Pages */}
         <main className="relative pt-14 bg-[#0f150f] flex-1 w-full">
           {activeTab === "dashboard" && (
-            <DashboardGraph
+            <DashboardPage
+              searchQuery={searchQuery}
+              onSelectTargetForAI={handleSelectTargetForAI}
+              lastDataRefresh={lastDataRefresh}
+              activeCaseId="CASE-HAWALA-2026"
               onGraphLoaded={(data) => setInvestigationData(data)}
             />
           )}

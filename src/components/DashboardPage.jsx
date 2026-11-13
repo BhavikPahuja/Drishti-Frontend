@@ -13,6 +13,7 @@ export default function DashboardPage({
   searchQuery,
   onSelectTargetForAI,
   lastDataRefresh,
+  activeCaseId = "CASE-HAWALA-2026",
 }) {
   const containerRef = useRef(null);
   const networkRef = useRef(null);

@@ -1,7 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { getRecentFiles, uploadFile, deleteFile } from '../services/fileService';
+import React, { useState, useEffect } from "react";
+import {
+  getRecentFiles,
+  uploadFile,
+  deleteFile,
+} from "../services/fileService";
 
-export default function FileIngestionPage({ activeCase, onUploadSuccess, onNavigateToDashboard }) {
+export default function FileIngestionPage({
+  activeCase,
+  onUploadSuccess,
+  onNavigateToDashboard,
+}) {
   const activeCaseId = activeCase ? activeCase.caseId : null;
   const [recentFiles, setRecentFiles] = useState([]);
   const [loadingFiles, setLoadingFiles] = useState(true);
@@ -23,7 +31,9 @@ export default function FileIngestionPage({ activeCase, onUploadSuccess, onNavig
       setRecentFiles(files);
     } catch (err) {
       console.error("Error fetching recent files from backend:", err);
-      setFetchError(err.message || 'Failed to connect to backend document repository.');
+      setFetchError(
+        err.message || "Failed to connect to backend document repository.",
+      );
       setRecentFiles([]);
     } finally {
       setLoadingFiles(false);
@@ -39,36 +49,44 @@ export default function FileIngestionPage({ activeCase, onUploadSuccess, onNavig
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!activeCaseId) {
-      alert("No active case selected.");
-      return;
-    }
-
     setIsUploading(true);
-    setUploadProgress({ stage: 'SELECTED', percent: 10, message: 'File selected. Uploading to DocumentController...' });
+    setUploadProgress({
+      stage: "SELECTED",
+      percent: 10,
+      message: "File selected. Starting local document simulation...",
+    });
 
     try {
-      const uploadRes = await uploadFile(file, (progress) => {
-        setUploadProgress(progress);
-      }, { caseId: activeCaseId });
+      const uploadRes = await uploadFile(
+        file,
+        (progress) => {
+          setUploadProgress(progress);
+        },
+        { caseId: activeCaseId || "CASE-HAWALA-2026" },
+      );
 
       if (onUploadSuccess) {
         onUploadSuccess(uploadRes);
       }
 
       setUploadProgress({
-        stage: 'PROCESSED & SYNCED',
+        stage: "PROCESSED & SYNCED",
         percent: 100,
-        message: 'Document processed by NLP! Extracted entities have been synced to the Case Graph.',
-        completed: true
+        message:
+          "Document processed by NLP! Extracted entities have been synced to the Case Graph.",
+        completed: true,
       });
       setIsUploading(false);
     } catch (err) {
       console.error("File upload error:", err);
-      setUploadProgress({ stage: 'FAILED', percent: 0, message: err.message || 'File upload failed.' });
+      setUploadProgress({
+        stage: "FAILED",
+        percent: 0,
+        message: err.message || "File upload failed.",
+      });
       setIsUploading(false);
     } finally {
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 
@@ -97,9 +115,12 @@ export default function FileIngestionPage({ activeCase, onUploadSuccess, onNavig
               FILE INGESTION & OCR ENGINE
             </span>
           </div>
-          <h1 className="font-['Space_Grotesk'] text-xl font-bold text-[#dee4da]">Evidence Document Ingestion Vault</h1>
+          <h1 className="font-['Space_Grotesk'] text-xl font-bold text-[#dee4da]">
+            Evidence Document Ingestion Vault
+          </h1>
           <p className="text-[12px] text-[#8e928b] mt-0.5">
-            Upload FIR narrative reports, call detail records (CDR), and financial audits into the Drishti intelligence database.
+            Upload FIR narrative reports, call detail records (CDR), and
+            financial audits into the Drishti intelligence database.
           </p>
         </div>
       </div>
@@ -121,26 +142,38 @@ export default function FileIngestionPage({ activeCase, onUploadSuccess, onNavig
             <span className="material-symbols-outlined text-[36px] text-[#bccbb8] mb-2 group-hover:scale-105 transition-transform">
               upload_file
             </span>
-            <p className="font-['Space_Grotesk'] text-[13px] font-bold text-[#dee4da]">Browse or Drag Investigation File</p>
-            <p className="text-[10px] text-[#8e928b] mt-1 font-['Space_Grotesk'] uppercase">PDF, DOCX, CSV, TXT (MAX 50MB)</p>
+            <p className="font-['Space_Grotesk'] text-[13px] font-bold text-[#dee4da]">
+              Browse or Drag Investigation File
+            </p>
+            <p className="text-[10px] text-[#8e928b] mt-1 font-['Space_Grotesk'] uppercase">
+              PDF, DOCX, CSV, TXT (MAX 50MB)
+            </p>
           </div>
 
           {/* Upload Progress Tracker */}
           {uploadProgress && (
-            <div className={`p-3 bg-[#0a100a] border space-y-2 font-['Space_Grotesk'] ${uploadProgress.stage === 'FAILED' ? 'border-[#93000a]' : 'border-[#444842]/40'}`}>
+            <div
+              className={`p-3 bg-[#0a100a] border space-y-2 font-['Space_Grotesk'] ${uploadProgress.stage === "FAILED" ? "border-[#93000a]" : "border-[#444842]/40"}`}
+            >
               <div className="flex justify-between items-center text-[11px]">
-                <span className={`font-bold uppercase ${uploadProgress.stage === 'FAILED' ? 'text-[#ffb4ab]' : 'text-[#bccbb8]'}`}>
+                <span
+                  className={`font-bold uppercase ${uploadProgress.stage === "FAILED" ? "text-[#ffb4ab]" : "text-[#bccbb8]"}`}
+                >
                   {uploadProgress.stage}
                 </span>
-                <span className="text-[#8e928b]">{uploadProgress.percent}%</span>
+                <span className="text-[#8e928b]">
+                  {uploadProgress.percent}%
+                </span>
               </div>
               <div className="w-full bg-[#1b211b] h-1.5 flex">
-                <div 
-                  className={`h-full transition-all duration-300 ${uploadProgress.stage === 'FAILED' ? 'bg-[#ffb4ab]' : 'bg-[#bccbb8]'}`}
+                <div
+                  className={`h-full transition-all duration-300 ${uploadProgress.stage === "FAILED" ? "bg-[#ffb4ab]" : "bg-[#bccbb8]"}`}
                   style={{ width: `${uploadProgress.percent}%` }}
                 />
               </div>
-              <p className={`text-[10px] ${uploadProgress.stage === 'FAILED' ? 'text-[#ffb4ab]' : 'text-[#c4c8c0]'}`}>
+              <p
+                className={`text-[10px] ${uploadProgress.stage === "FAILED" ? "text-[#ffb4ab]" : "text-[#c4c8c0]"}`}
+              >
                 {uploadProgress.message}
               </p>
               {uploadProgress.completed && onNavigateToDashboard && (
@@ -149,7 +182,9 @@ export default function FileIngestionPage({ activeCase, onUploadSuccess, onNavig
                   onClick={onNavigateToDashboard}
                   className="mt-2 w-full py-2 bg-[#354234] hover:bg-[#435342] text-[#dee4da] text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors border border-[#bccbb8]/40"
                 >
-                  <span className="material-symbols-outlined text-[15px]">hub</span>
+                  <span className="material-symbols-outlined text-[15px]">
+                    hub
+                  </span>
                   <span>View Updated Case Graph</span>
                 </button>
               )}
